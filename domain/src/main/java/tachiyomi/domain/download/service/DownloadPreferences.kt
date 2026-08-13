@@ -18,6 +18,15 @@ class DownloadPreferences(
 
     val autoDownloadWhileReading: Preference<Int> = preferenceStore.getInt("auto_download_while_reading", 0)
 
+    /**
+     * Keeps a chapter of a library entry once it has been read online, reusing the pages the
+     * reader already fetched instead of downloading them a second time.
+     */
+    val saveChaptersWhileReading: Preference<Boolean> = preferenceStore.getBoolean(
+        "save_chapters_while_reading",
+        true,
+    )
+
     val removeAfterReadSlots: Preference<Int> = preferenceStore.getInt("remove_after_read_slots", -1)
 
     val removeAfterMarkedAsRead: Preference<Boolean> = preferenceStore.getBoolean(

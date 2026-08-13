@@ -182,6 +182,14 @@ object SettingsDownloadScreen : SearchableSettings {
                     enabled = downloadNewChapters,
                     onClick = { showDialog = true },
                 ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = downloadPreferences.saveChaptersWhileReading,
+                    title = stringResource(MR.strings.pref_save_chapters_while_reading),
+                    subtitle = stringResource(MR.strings.pref_save_chapters_while_reading_summary),
+                ),
+                Preference.PreferenceItem.InfoPreference(
+                    stringResource(MR.strings.pref_save_chapters_while_reading_info),
+                ),
             ),
         )
     }

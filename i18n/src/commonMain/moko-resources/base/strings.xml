@@ -518,6 +518,9 @@
     <string name="pref_download_new">Download new chapters</string>
     <string name="pref_download_new_unread_chapters_only">Skip downloading duplicate read chapters</string>
     <string name="pref_download_new_categories_details">Entries in excluded categories will not be downloaded even if they are also in included categories.</string>
+    <string name="pref_save_chapters_while_reading">Keep chapters you read</string>
+    <string name="pref_save_chapters_while_reading_summary">Chapters you read online are saved for offline reading, for entries in your library only</string>
+    <string name="pref_save_chapters_while_reading_info">A chapter is saved once you leave it, reusing the pages already fetched, so reading and keeping it costs one download instead of two.</string>
     <string name="download_ahead">Download ahead</string>
     <string name="auto_download_while_reading">Auto download while reading</string>
     <string name="download_ahead_info">Only works if the current chapter + the next one are already downloaded.</string>
