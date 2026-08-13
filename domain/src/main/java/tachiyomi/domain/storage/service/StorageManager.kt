@@ -51,6 +51,10 @@ class StorageManager(
             .takeIf { it?.exists() == true }
     }
 
+    fun getBaseDirectory(): UniFile? {
+        return baseDir
+    }
+
     fun getAutomaticBackupsDirectory(): UniFile? {
         return baseDir?.createDirectory(AUTOMATIC_BACKUPS_PATH)
     }
@@ -70,7 +74,7 @@ class StorageManager(
     // SY <--
 }
 
-private const val AUTOMATIC_BACKUPS_PATH = "autobackup"
+const val AUTOMATIC_BACKUPS_PATH = "autobackup"
 private const val DOWNLOADS_PATH = "downloads"
 private const val LOCAL_SOURCE_PATH = "local"
 

@@ -61,6 +61,8 @@ import eu.kanade.presentation.more.settings.widget.TrailingWidgetBuffer
 import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.data.backup.create.BackupCreateJob
 import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreJob
+import eu.kanade.tachiyomi.data.backup.restore.RestoreOptions
+import eu.kanade.tachiyomi.data.backup.restore.StorageBackupFinder
 import eu.kanade.tachiyomi.data.cache.ChapterCache
 import eu.kanade.tachiyomi.data.cache.PagePreviewCache
 import eu.kanade.tachiyomi.data.export.LibraryExporter
@@ -73,6 +75,7 @@ import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import logcat.LogPriority
@@ -136,6 +139,7 @@ object SettingsDataScreen : SearchableSettings {
         storageDirPref: tachiyomi.core.common.preference.Preference<String>,
     ): ManagedActivityResultLauncher<Uri?, Uri?> {
         val context = LocalContext.current
+        val scope = rememberCoroutineScope()
 
         return rememberLauncherForActivityResult(
             contract = ActivityResultContracts.OpenDocumentTree(),
@@ -158,8 +162,28 @@ object SettingsDataScreen : SearchableSettings {
 
                 UniFile.fromUri(context, uri)?.let {
                     storageDirPref.set(it.uri.toString())
+                    restoreLibraryFromStorage(context, scope, it)
                 }
             }
+        }
+    }
+
+    /**
+     * Restores the library from the folder that was just picked, when the library is still empty.
+     *
+     * The folder already carries the downloads and the automatic backups; a fresh install pointed
+     * at it should show the series they belong to, instead of an empty library beside a folder
+     * full of the user's own content.
+     */
+    private fun restoreLibraryFromStorage(context: Context, scope: CoroutineScope, root: UniFile) {
+        // Non-cancellable: picking the folder during onboarding moves on to the next step, which
+        // takes the composable's scope down with it while the backup is still being decoded.
+        scope.launchNonCancellable {
+            val backup = StorageBackupFinder(context).findForEmptyLibrary(root) ?: return@launchNonCancellable
+            withUIContext {
+                context.toast(context.stringResource(MR.strings.restoring_library_from_storage, backup.name.orEmpty()))
+            }
+            BackupRestoreJob.start(context, backup.uri, RestoreOptions())
         }
     }
 

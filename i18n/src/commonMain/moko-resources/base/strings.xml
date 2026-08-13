@@ -547,7 +547,8 @@
 
       <!-- Data and storage section -->
     <string name="pref_storage_location">Storage location</string>
-    <string name="pref_storage_location_info">Used for automatic backups, chapter downloads, and local source.</string>
+    <string name="pref_storage_location_info">Used for automatic backups, chapter downloads, and local source. When your library is empty, the newest backup found in the folder is restored automatically.</string>
+    <string name="restoring_library_from_storage">Restoring your library from %1$s</string>
     <string name="pref_create_backup">Create backup</string>
     <string name="pref_create_backup_summ">Can be used to restore current library</string>
     <string name="pref_restore_backup">Restore backup</string>
