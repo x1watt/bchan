@@ -62,6 +62,7 @@ import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.data.backup.create.BackupCreateJob
 import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreJob
 import eu.kanade.tachiyomi.data.backup.restore.RestoreOptions
+import eu.kanade.tachiyomi.data.backup.restore.StorageBackupFinder
 import eu.kanade.tachiyomi.data.cache.ChapterCache
 import eu.kanade.tachiyomi.data.cache.PagePreviewCache
 import eu.kanade.tachiyomi.data.export.LibraryExporter
@@ -72,6 +73,7 @@ import eu.kanade.tachiyomi.data.sync.service.GoogleDriveService
 import eu.kanade.tachiyomi.data.sync.service.GoogleDriveSyncService
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.toast
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import logcat.LogPriority
@@ -135,36 +137,7 @@ object SettingsDataScreen : SearchableSettings {
         storageDirPref: tachiyomi.core.common.preference.Preference<String>,
     ): ManagedActivityResultLauncher<Uri?, Uri?> {
         val context = LocalContext.current
-
-        // bchan: when the picked folder already holds a previous installation's automatic backup,
-        // offer to restore it so the user's library and settings are configured without any manual steps.
-        var detectedBackup by remember { mutableStateOf<Uri?>(null) }
-        if (detectedBackup != null) {
-            AlertDialog(
-                onDismissRequest = { detectedBackup = null },
-                title = { Text(stringResource(SYMR.strings.restore_previous_install_title)) },
-                text = { Text(stringResource(SYMR.strings.restore_previous_install_message)) },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            val backupUri = detectedBackup
-                            detectedBackup = null
-                            if (backupUri != null) {
-                                BackupRestoreJob.start(context, backupUri, RestoreOptions())
-                                context.toast(SYMR.strings.restore_previous_install_started)
-                            }
-                        },
-                    ) {
-                        Text(stringResource(MR.strings.action_restore))
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { detectedBackup = null }) {
-                        Text(stringResource(MR.strings.action_cancel))
-                    }
-                },
-            )
-        }
+        val scope = rememberCoroutineScope()
 
         return rememberLauncherForActivityResult(
             contract = ActivityResultContracts.OpenDocumentTree(),
@@ -187,22 +160,29 @@ object SettingsDataScreen : SearchableSettings {
 
                 UniFile.fromUri(context, uri)?.let {
                     storageDirPref.set(it.uri.toString())
-                    detectedBackup = findLatestBackup(context, it)
+                    restoreLibraryFromStorage(context, scope, it)
                 }
             }
         }
     }
 
     /**
-     * bchan: finds the newest automatic backup left by a previous installation under the picked
-     * storage folder (the `.tachibk` files in `<base>/autobackup`), or null when there is none.
+     * Restores the library from the folder that was just picked, when the library is still empty.
+     *
+     * The folder already carries the downloads and the automatic backups; a fresh install pointed
+     * at it should show the series they belong to, instead of an empty library beside a folder
+     * full of the user's own content.
      */
-    private fun findLatestBackup(context: Context, baseDir: UniFile): Uri? {
-        val autoBackupDir = baseDir.findFile("autobackup") ?: return null
-        return autoBackupDir.listFiles()
-            ?.filter { it.isFile && it.name?.endsWith(".tachibk") == true }
-            ?.maxByOrNull { it.name.orEmpty() }
-            ?.uri
+    private fun restoreLibraryFromStorage(context: Context, scope: CoroutineScope, root: UniFile) {
+        // Non-cancellable: picking the folder during onboarding moves on to the next step, which
+        // takes the composable's scope down with it while the backup is still being decoded.
+        scope.launchNonCancellable {
+            val backup = StorageBackupFinder(context).findForEmptyLibrary(root) ?: return@launchNonCancellable
+            withUIContext {
+                context.toast(context.stringResource(MR.strings.restoring_library_from_storage, backup.name.orEmpty()))
+            }
+            BackupRestoreJob.start(context, backup.uri, RestoreOptions())
+        }
     }
 
     @Composable

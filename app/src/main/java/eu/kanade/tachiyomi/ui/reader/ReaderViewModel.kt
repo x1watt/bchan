@@ -275,6 +275,7 @@ class ReaderViewModel @JvmOverloads constructor(
 
     private val incognitoMode: Boolean by lazy { getIncognitoState.await(manga?.source) }
     private val downloadAheadAmount = downloadPreferences.autoDownloadWhileReading.get()
+    private val saveChaptersWhileReading = downloadPreferences.saveChaptersWhileReading.get()
 
     init {
         // To save state
@@ -329,7 +330,40 @@ class ReaderViewModel @JvmOverloads constructor(
      * trigger deletion of the downloaded chapters.
      */
     fun onActivityFinish() {
+        getCurrentChapter()?.let { saveReadChapter(it) }
         deletePendingChapters()
+    }
+
+    /**
+     * Keeps the chapter that was just read online, when it belongs to a library entry. The pages
+     * the reader fetched are still in the chapter cache, so the downloader copies them from there
+     * (see [eu.kanade.tachiyomi.data.download.Downloader.getOrDownloadImage]) instead of asking
+     * the source for the same images a second time.
+     *
+     * A chapter is never queued while it is still on screen: the reader and the downloader do not
+     * share in-flight requests, so the two would race and fetch every page twice — the very thing
+     * this is meant to avoid.
+     */
+    private fun saveReadChapter(chapter: ReaderChapter) {
+        if (!saveChaptersWhileReading || incognitoMode) return
+        val manga = manga ?: return
+        if (!manga.favorite) return
+        // Already offline
+        if (chapter.pageLoader is DownloadPageLoader) return
+
+        // It was queued before being opened, and opening it took it back out of the queue: put
+        // that download back instead of queueing a second one for the same chapter.
+        val pending = chapterToDownload
+        if (pending != null && pending.chapter.id == chapter.chapter.id) {
+            chapterToDownload = null
+            downloadManager.addDownloadsToStartOfQueue(listOf(pending))
+            return
+        }
+
+        val domainChapter = chapter.chapter.toDomainChapter() ?: return
+        viewModelScope.launchNonCancellable {
+            downloadManager.downloadChapters(manga, listOf(domainChapter))
+        }
     }
 
     /**
@@ -452,7 +486,15 @@ class ReaderViewModel @JvmOverloads constructor(
         page: Int? = null,
         // SY <--
     ): ViewerChapters {
+        // The chapter being left behind has just been read online, so its pages are still in the
+        // reader cache. Queue it now and the downloader copies them instead of refetching.
+        val previousChapter = getCurrentChapter()
+
         loader.loadChapter(chapter /* SY --> */, page/* SY <-- */)
+
+        if (previousChapter != null && previousChapter != chapter) {
+            saveReadChapter(previousChapter)
+        }
 
         val chapterPos = chapterList.indexOf(chapter)
         val newChapters = ViewerChapters(

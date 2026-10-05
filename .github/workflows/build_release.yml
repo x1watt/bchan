@@ -39,7 +39,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Build release APKs
-        run: ./gradlew assembleDevRelease --stacktrace
+        run: ./gradlew assembleRelease --stacktrace
 
       - name: Sign APKs
         run: |
@@ -69,7 +69,7 @@ jobs:
           echo "Using build-tools at $BUILD_TOOLS"
 
           mkdir -p artifacts
-          for apk in app/build/outputs/apk/dev/release/*-unsigned.apk; do
+          for apk in app/build/outputs/apk/release/*-unsigned.apk; do
             aligned="$RUNNER_TEMP/$(basename "${apk%.apk}")-aligned.apk"
             "$BUILD_TOOLS/zipalign" -p -f 4 "$apk" "$aligned"
 
@@ -124,7 +124,7 @@ jobs:
           body: |
             Automated build of bchan.
 
-            **Download `bchan.apk`** if you are unsure which file to pick — it works on
+            **Download `bchan.apk`** if you are unsure which file to pick; it works on
             all devices. The per-architecture APKs are smaller alternatives.
           files: artifacts/*.apk
           draft: false

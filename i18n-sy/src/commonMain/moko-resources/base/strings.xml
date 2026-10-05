@@ -753,8 +753,4 @@
     <string name="move_to_root">None (root)</string>
     <string name="folder_delete_confirmation">Delete folder \"%1$s\"? The series inside will return to the library root.</string>
     <string name="folder_locked_toast">Folder is locked</string>
-    <!-- bchan: auto-detect previous installation on storage folder pick -->
-    <string name="restore_previous_install_title">Previous library found</string>
-    <string name="restore_previous_install_message">A backup from a previous installation was found in this folder. Restore it now to load your series and settings automatically?</string>
-    <string name="restore_previous_install_started">Restoring previous library…</string>
 </resources>

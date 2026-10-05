@@ -32,8 +32,8 @@ android {
     defaultConfig {
         applicationId = "app.bchan"
 
-        versionCode = 82
-        versionName = "1.13.2"
+        versionCode = 83
+        versionName = "1.13.3"
 
         buildConfigField("String", "UPSTREAM_VERSION", """"0.20.1"""")
 
