@@ -28,6 +28,7 @@ class CreateFolder(
 
         try {
             val id = categoryRepository.insert(newFolder)
+                ?: error("Failed to insert folder")
             Result.Success(newFolder.copy(id = id))
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e)

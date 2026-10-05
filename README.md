@@ -1,7 +1,7 @@
 # bchan
 
-[![Build APK](https://github.com/geograms/bchan/actions/workflows/build_release.yml/badge.svg)](https://github.com/geograms/bchan/actions/workflows/build_release.yml)
-[![Latest release](https://img.shields.io/github/v/release/geograms/bchan?label=download&color=E5353B)](https://github.com/geograms/bchan/releases/latest)
+[![Build APK](https://github.com/x1watt/bchan/actions/workflows/build_release.yml/badge.svg)](https://github.com/x1watt/bchan/actions/workflows/build_release.yml)
+[![Latest release](https://img.shields.io/github/v/release/x1watt/bchan?label=download&color=E5353B)](https://github.com/x1watt/bchan/releases/latest)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](./LICENSE)
 
 **bchan** is a free and open-source manga & comic reader for Android 8.0+. It is a
@@ -14,7 +14,7 @@ with sensible defaults so you can start reading with as little setup as possible
 
 ## Download
 
-Grab the latest APK from the **[Releases page](https://github.com/geograms/bchan/releases/latest)**.
+Grab the latest APK from the **[Releases page](https://github.com/x1watt/bchan/releases/latest)**.
 
 If you are unsure which file to pick, download **`bchan.apk`** (the universal build).
 Per-architecture builds (`arm64-v8a`, `armeabi-v7a`, `x86`, `x86_64`) are smaller and

@@ -23,7 +23,7 @@ interface CategoryRepository {
     suspend fun setFolderCover(categoryId: Long, cover: String?)
 
     // SY -->
-    suspend fun insert(category: Category): Long
+    suspend fun insert(category: Category): Long?
     // SY <--
 
     suspend fun updatePartial(update: CategoryUpdate)

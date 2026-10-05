@@ -48,6 +48,8 @@ val migrations: List<Migration>
         CategoryPreferencesCleanupMigration(),
         RemoveDuplicateReaderPreferenceMigration(),
         InstallationIdMigration(),
+        MoveVerticalSeekbarSettingsMigration(),
+        VerticalNavigatorMigration(),
         // SY -->
         FlattenDownloadsMigration(),
         SeedDefaultExtensionRepoMigration(),

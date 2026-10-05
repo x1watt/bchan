@@ -104,7 +104,8 @@ WHERE MC.manga_id = :mangaId;
 
 insert:
 INSERT INTO categories(name, sort, flags, manga_order, version, uid, last_modified_at, is_folder, cover, locked)
-VALUES (:name, :order, :flags, "", :version, :uid, :last_modified_at, :isFolder, :cover, :locked);
+VALUES (:name, :order, :flags, "", :version, :uid, :last_modified_at, :isFolder, :cover, :locked)
+RETURNING _id;
 
 delete:
 DELETE FROM categories
@@ -133,9 +134,6 @@ WHERE _id = :categoryId;
 updateAllFlags:
 UPDATE categories SET
 flags = coalesce(?, flags);
-
-selectLastInsertedRowId:
-SELECT last_insert_rowid();
 
 resetIsSyncing:
 UPDATE categories

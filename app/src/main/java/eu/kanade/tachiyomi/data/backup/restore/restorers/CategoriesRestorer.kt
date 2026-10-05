@@ -1,14 +1,15 @@
 package eu.kanade.tachiyomi.data.backup.restore.restorers
 
+import app.cash.sqldelight.async.coroutines.awaitAsOne
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
-import tachiyomi.data.DatabaseHandler
+import tachiyomi.data.Database
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.library.service.LibraryPreferences
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 class CategoriesRestorer(
-    private val handler: DatabaseHandler = Injekt.get(),
+    private val database: Database = Injekt.get(),
     private val getCategories: GetCategories = Injekt.get(),
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
 ) {
@@ -38,49 +39,42 @@ class CategoriesRestorer(
                     }
 
                     if (dbCategory != null) {
-                        handler.await {
-                            categoriesQueries.update(
-                                name = backupCategory.name,
-                                order = backupCategory.order,
-                                flags = backupCategory.flags,
-                                version = backupCategory.version,
-                                uid = if (backupCategory.uid != 0L) backupCategory.uid else dbCategory.uid,
-                                last_modified_at = backupCategory.lastModifiedAt,
-                                isSyncing = 1,
-                                // bchan folders (cover is device-local, left untouched)
-                                isFolder = if (backupCategory.isFolder) 1L else 0L,
-                                cover = null,
-                                locked = if (backupCategory.locked) 1L else 0L,
-                                categoryId = dbCategory.id,
-                            )
-                        }
+                        database.categoriesQueries.update(
+                            name = backupCategory.name,
+                            order = backupCategory.order,
+                            flags = backupCategory.flags,
+                            version = backupCategory.version,
+                            uid = if (backupCategory.uid != 0L) backupCategory.uid else dbCategory.uid,
+                            last_modified_at = backupCategory.lastModifiedAt,
+                            isSyncing = 1,
+                            // bchan folders (cover is device-local, left untouched)
+                            isFolder = if (backupCategory.isFolder) 1L else 0L,
+                            cover = null,
+                            locked = if (backupCategory.locked) 1L else 0L,
+                            categoryId = dbCategory.id,
+                        )
                         return@map dbCategory
                     }
 
                     val order = nextOrder++
-                    handler.awaitOneExecutable {
-                        categoriesQueries.insert(
-                            name = backupCategory.name,
-                            order = order,
-                            flags = backupCategory.flags,
-                            version = backupCategory.version,
-                            uid = backupCategory.uid,
-                            last_modified_at = backupCategory.lastModifiedAt,
-                            // bchan folders (cover is device-local, not restored)
-                            isFolder = if (backupCategory.isFolder) 1L else 0L,
-                            cover = null,
-                            locked = if (backupCategory.locked) 1L else 0L,
-                        )
-                        categoriesQueries.selectLastInsertedRowId()
-                    }
+                    database.categoriesQueries.insert(
+                        name = backupCategory.name,
+                        order = order,
+                        flags = backupCategory.flags,
+                        version = backupCategory.version,
+                        uid = backupCategory.uid,
+                        last_modified_at = backupCategory.lastModifiedAt,
+                        // bchan folders (cover is device-local, not restored)
+                        isFolder = if (backupCategory.isFolder) 1L else 0L,
+                        cover = null,
+                        locked = if (backupCategory.locked) 1L else 0L,
+                    ).awaitAsOne()
                         .let { id -> backupCategory.toCategory(id).copy(order = order) }
                 }
             // SY <--
 
             // SY -->
-            handler.await {
-                categoriesQueries.resetIsSyncing()
-            }
+            database.categoriesQueries.resetIsSyncing()
             // SY <--
 
             libraryPreferences.categorizedDisplaySettings.set(
